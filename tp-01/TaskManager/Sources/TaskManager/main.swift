@@ -31,7 +31,7 @@ var m0 : PTMarking = [taskPool: 0, processPool: 0, inProgress: 0]
     // On execute la tâche
     let m5 = exec.fire(from: m4)!
     print(m5)
-    // On execute à nouveau la même tache
+    // On execute à nouveau la même tâche
 print ("Il y a deux jetons dans inProgress, la même tache a été executé 2 fois")
 print ("avec deux processus différents")
     let m6 = success.fire(from: m5)!
@@ -40,8 +40,8 @@ print ("avec deux processus différents")
 
 
 print ("il n'y a plus de jeton dans taskPool, ni dans processPool")
-print ("Mais il reste un jeton dans inProgress. alors que la tâche est déjà ")
-print ("réussi")
+print ("Mais il reste un jeton dans inProgress, alors que la tâche est déjà ")
+print ("réussie")
 print ("\n")
 
     // La même tâche peut etre executé plusieurs fois par deux processus
@@ -56,6 +56,7 @@ let correctTaskManager = createCorrectTaskManager()
 let correctTaskPool = correctTaskManager.places.first { $0.name == "taskPool" }!
 let correctProcessPool = correctTaskManager.places.first { $0.name == "processPool" }!
 let correctInProgress = correctTaskManager.places.first { $0.name == "inProgress" }!
+let correctStop = correctTaskManager.places.first { $0.name == "stop" }!
 
 let correctCreate = correctTaskManager.transitions.first { $0.name == "create" }!
 let correctSpawn = correctTaskManager.transitions.first { $0.name == "spawn" }!
@@ -64,10 +65,10 @@ let correctSuccess = correctTaskManager.transitions.first { $0.name == "success"
 let correctFail = correctTaskManager.transitions.first { $0.name == "fail" }!
 
 print("Voici le problème corrigé:")
-var m00 : PTMarking = [correctTaskPool: 0, correctProcessPool: 0, correctInProgress: 0]
+var m00 : PTMarking = [correctTaskPool: 0, correctProcessPool: 0, correctInProgress: 0, correctStop: 0]
     let m11 = correctCreate.fire(from: m00)!
     print(m11)
-    // On crée une tâche
+    // On crée une tâche, et on mets un jeton dans stop
     let m22 = correctSpawn.fire(from: m11)!
     print(m22)
     // On crée un processus
@@ -79,12 +80,16 @@ var m00 : PTMarking = [correctTaskPool: 0, correctProcessPool: 0, correctInProgr
     // On execute la tâche
 
     // On ne peut pas executer la tache une seconde fois avec un autre processus
-    // Le problème est donc corrigé, de plus si l'éxecution échoue, la tâche
-    // ira dans l'ensemble des tâches, le processus ira dans l'ensemble des
-    // processus et on pourra re-executer la tache.
-    // Si l'éxecution réussi, la tache et le processus seront détruits.
+    // car il n'y a plus de jetons dans stop
+    // Le problème est donc corrigé, de plus si l'éxecution échoue,
+    // un jeton retournera dans stop ce qui permettra de re-executer la tache
+    // qui a échoué
+    // Si l'éxecution réussi, la tache et le processus seront détruits, ainsi
+    // que le jeton dans stop.
 
-print ("il reste 0 jeton dans taskPool, 1 jeton dans processPool et")
-print ("1 jeton dans inProgress. Le problème est corrigé, on ne peut donc plus ")
-print ("executer la même tâche plusieurs fois avec deux processus différents. ")
+print ("il reste 1 jeton dans taskPool, 1 jeton dans processPool,")
+print ("1 jeton dans inProgress et 0 jeton dans stop. Le problème est corrigé, ")
+print ("on ne peut donc plus executer la même tâche plusieurs fois avec deux  ")
+print ("processus différents, car il faut un jeton dans stop pour executer une")
+print ("tâche. ")
 print ("\n")
