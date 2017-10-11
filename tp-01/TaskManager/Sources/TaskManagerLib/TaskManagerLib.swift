@@ -40,45 +40,51 @@ public func createCorrectTaskManager() -> PTNet {
     let taskPool    = PTPlace(named: "taskPool")
     let processPool = PTPlace(named: "processPool")
     let inProgress  = PTPlace(named: "inProgress")
+    let stop        = PTPlace(named: "stop")
+    // On ajoute une place appelé stop qui permettra d'executer une tâche
+    // avec un seul et unique processus seulement. Le nombre de jeton
+    // dans stop représentera le nombre de tâches différentes dans
+    // taskPool.
 
     // Transitions
     let create      = PTTransition(
         named          : "create",
         preconditions  : [],
-        postconditions : [PTArc(place: taskPool)])
+        postconditions : [PTArc(place: taskPool), PTArc(place: stop)])
+    // une post condition de create est "stop" cela permet qu'à chaque fois
+    // qu'on crée une tache qu'un jeton s'ajoute aussi dans stop, ainsi chaque
+    // jeton dans stop représentera chaques tâches différentes.
+
     let spawn       = PTTransition(
         named          : "spawn",
         preconditions  : [],
         postconditions : [PTArc(place: processPool)])
     let success     = PTTransition(
         named          : "success",
-        preconditions  : [PTArc(place: inProgress)],
+        preconditions  : [PTArc(place: taskPool), PTArc(place: inProgress)],
         postconditions : [])
-    // On enlève la pré-condition taskPool de success pour qu'une execution
-    // puisse être réussi sans avoir un jeton dans taskPool 
     let exec       = PTTransition(
         named          : "exec",
-        preconditions  : [PTArc(place: taskPool), PTArc(place: processPool)],
-        postconditions : [PTArc(place: inProgress)])
-    // j'ai retiré la postcondition taskPool qui permettait une tâches de
-    // s'executer plusieurs fois si on avait plusieurs processus et de ce fait
-    // laisser un jeton dans inProgress alors qu'il n'y a rien dans taskPool
-    // permettant de réussir l'execution.
+        preconditions  : [PTArc(place: taskPool), PTArc(place: processPool), PTArc(place: stop)],
+        postconditions : [PTArc(place: taskPool), PTArc(place: inProgress)])
+    // j'ai ajouté la précondition stop à la transitions exec.
+    // Le nombre de jetons dans stop représente le nombre de tâches différentes
+    // de ce fait pour qu'une tache soit executée, stop doit posséder un jeton
+    // Si une tache souhaite être executer et que stop ne possède pas de jeton
+    // cela signifie que la têche est déjà en cours d'éxecution avec un processus.
 
     let fail        = PTTransition(
         named          : "fail",
         preconditions  : [PTArc(place: inProgress)],
-        postconditions : [PTArc(place: processPool), PTArc(place: taskPool)])
+        postconditions : [PTArc(place: stop)])
 
-    // Pour la transition fail j'ai ajouté 2 postcondition, 1 allant vers
-    // processPool, pour que le processus retourne dans
-    // l'ensemble des processus après que l'éxecution. De cette manière si
-    // l'exécution échoue il est possible de ré-executer la tâche.
-    // ET 1 allant à taskPool pour que la tâche qui n'a pas pu être executé
-    // retourne dans l'ensemble des tâches
+    // Pour la transition fail j'ai ajouté 1 postcondition allant vers
+    // la place stop, pour qu'une tâche puisse être re-executer après avoir échouée
+    // Elle sera re exécuté lorsqu'il y aura un processus dans processPool. 
+
 
     // P/T-net
     return PTNet(
-         places: [taskPool, processPool, inProgress],
+         places: [taskPool, processPool, inProgress, stop],
          transitions: [create, spawn, success, exec, fail])
 }
